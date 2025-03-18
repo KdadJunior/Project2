@@ -300,65 +300,96 @@ int main(int argc, char *argv[])
 {
     if (argc < 3)
     {     
-        std::cerr << "Usage: " << argv[0] << " <input.ppm> <output.ppm> [options]\n";   
+        std::cerr << "Program expects: " << argv[0] << " <input.ppm> <output.ppm> [options]\n"
+                  << "Supported options are: -g (grayscale), -i (invert), -x (contrast), -b (blur), -m (mirror), -c (compress)\n";  
   
         return 1;
     }
 
-
-    std::string inputFile = argv[1];
-    std::string outputFile = argv[2];
+    std::string inputFile, outputFile;
     std::vector<std::string> options;
 
-    for (int i = 3; i < argc; ++i)
+    // Flexible Argument Parsing Loop
+    int nonOptionCount = 0;  // Tracks the number of non-option arguments (input and output files)
+    for (int i = 1; i < argc; ++i)  // Iterates over all arguments from index 1
     {
-        options.push_back(argv[i]);
+        std::string arg = argv[i];  // Current argument being evaluated
+        if (arg[0] == '-')  // Identifies options (arguments starting with '-')
+        {
+            options.push_back(arg);  // Adds options to a vector, regardless of position
+        }
+        else
+        {
+            if (nonOptionCount == 0)  // Assigns the first non-option as input file
+                inputFile = arg;
+            else if (nonOptionCount == 1)  // Assigns the second non-option as output file
+                outputFile = arg;
+            else
+            {
+                std::cerr << "Error: Too many non-option arguments. Only input and output files are expected.\n";  // Handles excess non-options
+                return 1;
+            }
+            nonOptionCount++;  // Increments counter for each non-option found
+        }
+    }
+
+    // Validation of File Arguments
+    if (nonOptionCount < 2)  // Ensures at least two non-option arguments (input and output)
+    {
+        std::cerr << "Error: Both input and output file paths must be provided.\n";
+        return 1;
     }
 
     try
     {
         auto image = readPPM(inputFile);
 
-        for (const auto &option : options)
-{
-    if (option == "-g")
-    {
-        grayscale(image);
-        std::cout << "After Grayscale:\n";
-    }
-    else if (option == "-i")
-    {
-        invert(image);
-        std::cout << "After Inversion:\n";
-    }
-    else if (option == "-x")
-    {
-        contrast(image, 1.2f);
-        std::cout << "After Contrast:\n";
-    }
-    else if (option == "-b")
-    {
-        blur(image);
-        std::cout << "After Blur:\n";
-    }
-    else if (option == "-m")
-    {
-        std::cout << "Calling mirroring function...\n";
-        mirror(image);
-        //std::cout << "After Mirroring:\n";
-    }
-    else if (option == "-c")
-    {
-        compress(image);
-        std::cout << "After Compression:\n";
-    }
-    else
-    {
-        std::cerr << "Unknown option: " << option << "\n";
-        return 1;
-    }
+        // Apply Options in Order
+        for (const auto &option : options)  // Applies transformations based on collected options
+        {
+            if (option == "-g")
+            {   
+                std::cout << "Calling grayscale function...\n";
+                grayscale(image);
+                std::cout << "After Grayscale:\n";
+            }
+            else if (option == "-i")
+            {   
+                std::cout << "Calling invert function...\n";
+                invert(image);
+                std::cout << "After Inversion:\n";
+            }
+            else if (option == "-x")
+            {   
+                std::cout << "Calling contrast function...\n";
+                contrast(image, 1.2f);
+                std::cout << "After Contrast:\n";
+            }
+            else if (option == "-b")
+            {   
+                std::cout << "Calling blur function...\n";
+                blur(image);
+                std::cout << "After Blurring:\n";
+            }
+            else if (option == "-m")
+            {
+                std::cout << "Calling mirror function...\n";
+                mirror(image);
+                std::cout << "After Mirroring:\n";
+            }
+            else if (option == "-c")
+            {   
+                std::cout << "Calling compress function...\n";
+                compress(image);
+                std::cout << "After Compression:\n";
+            }
+            else
+            {
+                std::cerr << "Unknown option: " << option << "\n";
+                return 1;
+            }
 
-    // Print first few pixels after transformation
+    // Print first few pixels after transformation for debugging
     for (int i = 0; i < std::min(5, (int)image.size()); ++i)
     {
         for (int j = 0; j < std::min(5, (int)image[i].size()); ++j)
