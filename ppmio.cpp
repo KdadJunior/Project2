@@ -143,7 +143,7 @@ void writePPM(const std::string &filename, const std::vector<std::vector<RGB>> &
     testFile.close();
 
     // We expect at least (width * height * 3) bytes of pixel data plus a small overhead for the header.
-    const std::streamsize expectedMinSize = (width * height * 3) + 10; // 15 bytes as an approximate header size
+    const std::streamsize expectedMinSize = (width * height * 3) + 10; // 10 bytes as an approximate header size
     if (size < expectedMinSize) {
         throw std::runtime_error("File size mismatch: Possible truncation. Expected at least " +
                                      std::to_string(expectedMinSize) + " bytes, got " + std::to_string(size) + " bytes.");
@@ -181,15 +181,73 @@ void invert(std::vector<std::vector<RGB>> &image)
 }
 
 // Function to adjust contrast
+
+/*
 void contrast(std::vector<std::vector<RGB>> &image, float factor)
 {
     for (auto &row : image)
     {
         for (auto &pixel : row)
         {
-            pixel.r = std::min(255, std::max(0, static_cast<int>((pixel.r - 128) * factor + 128)));
-            pixel.g = std::min(255, std::max(0, static_cast<int>((pixel.g - 128) * factor + 128)));
-            pixel.b = std::min(255, std::max(0, static_cast<int>((pixel.b - 128) * factor + 128)));
+            pixel.r = std::min(255, std::max(0, static_cast<int>(std::round((pixel.r - 128) * factor + 128))));
+            pixel.g = std::min(255, std::max(0, static_cast<int>(std::round((pixel.r - 128) * factor + 128))));
+            pixel.b = std::min(255, std::max(0, static_cast<int>(std::round((pixel.r - 128) * factor + 128))));
+        }
+    }
+}
+*/
+/*
+void contrast(std::vector<std::vector<RGB>> &image, float factor)
+{
+    for (auto &row : image)
+    {
+        for (auto &pixel : row)
+        {
+            int newR = static_cast<int>(std::round((pixel.r - 128) * factor + 128));
+            int newG = static_cast<int>(std::round((pixel.g - 128) * factor + 128));
+            int newB = static_cast<int>(std::round((pixel.b - 128) * factor + 128));
+
+            // Clamp each channel between 0 and 255
+            pixel.r = std::min(255, std::max(0, newR));
+            pixel.g = std::min(255, std::max(0, newG));
+            pixel.b = std::min(255, std::max(0, newB));
+        }
+    }
+}
+*/
+/*
+void contrast(std::vector<std::vector<RGB>> &image, double factor)
+{
+    for (auto &row : image)
+    {
+        for (auto &pixel : row)
+        {
+            double newR = std::round((pixel.r - 128) * factor + 128);
+            double newG = std::round((pixel.g - 128) * factor + 128);
+            double newB = std::round((pixel.b - 128) * factor + 128);
+
+            pixel.r = std::min(255, std::max(0, static_cast<int>(newR)));
+            pixel.g = std::min(255, std::max(0, static_cast<int>(newG)));
+            pixel.b = std::min(255, std::max(0, static_cast<int>(newB)));
+        }
+    }
+}
+*/
+void contrast(std::vector<std::vector<RGB>> &image, float factor)
+{
+    for (auto &row : image)
+    {
+        for (auto &pixel : row)
+        {
+            // Truncate instead of rounding
+            int newR = static_cast<int>((pixel.r - 128) * factor + 128);
+            int newG = static_cast<int>((pixel.g - 128) * factor + 128);
+            int newB = static_cast<int>((pixel.b - 128) * factor + 128);
+
+            // Clamp each channel to [0,255]
+            pixel.r = std::min(255, std::max(0, newR));
+            pixel.g = std::min(255, std::max(0, newG));
+            pixel.b = std::min(255, std::max(0, newB));
         }
     }
 }
@@ -362,7 +420,7 @@ int main(int argc, char *argv[])
             else if (option == "-x")
             {   
                 std::cout << "Calling contrast function...\n";
-                contrast(image, 1.2f);
+                contrast(image, 1.2);
                 std::cout << "After Contrast:\n";
             }
             else if (option == "-b")
